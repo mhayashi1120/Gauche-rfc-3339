@@ -35,6 +35,7 @@
 ;;; (e.g. 1937-01-01T12:00:27.87+00:20 1985-04-12T23:20:50.52Z)
 
 (define-module rfc.3339
+  (use srfi-13)
   (use util.match)
   (use srfi-19)
   (use parser.peg)
@@ -68,17 +69,11 @@
    [($c #\.)]
    [frac ($many digit 1 3)]
    ($return
-    (let* ([text (rope->string frac)]
+    (let* ([s (rope->string frac)]
+           [text (string-pad-right s 3 #\0)]
            [n (string->number text)])
-      ;;TODO refactor
       ;; nanosecond
-      (cond
-       [(= (string-length text) 3)
-        (* n 1000000)]
-       [(= (string-length text) 2)
-        (* n 10000000)]
-       [else
-        (* n 100000000)])))))
+      (* n 1000000)))))
 
 ;; time-numoffset  = ("+" / "-") time-hour ":" time-minute
 ;; time-offset     = "Z" / time-numoffset
