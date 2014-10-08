@@ -32,6 +32,8 @@
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02T03:04:05Z"))
 (date-should (date 2014 1 2 3 4 5 0 32400)  (rfc3339-date->date "2014-01-02T03:04:05+09:00"))
 (date-should (date 2014 1 2 3 4 5 0 -35400) (rfc3339-date->date "2014-01-02T03:04:05-09:50"))
+(date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02t03:04:05z"))
+
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02 03:04:05Z"))
 
 ;; If you don't want `gosh' to exit with nonzero status even if

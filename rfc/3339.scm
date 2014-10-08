@@ -1,7 +1,7 @@
 ;;;
 ;;; rfc/3339.scm - Parse rfc3339 Timestamps
 ;;;
-;;;   Copyright (c) 2013-2014 Masahiro Hayashi <mhayashi1120@gmail.com>
+;;;   Copyright (c) 2014 Masahiro Hayashi <mhayashi1120@gmail.com>
 ;;;
 ;;;   Redistribution and use in source and binary forms, with or without
 ;;;   modification, are permitted provided that the following conditions
@@ -96,7 +96,7 @@
 (define %time-offset
   ($try
    ($or
-    ($do [($c #\Z)] ($return 0))
+    ($do [($one-of #[zZ])] ($return 0))
     %time-nummoffset)))
 
 ;; time-hour       = 2DIGIT  ; 00-23
@@ -127,7 +127,7 @@
   ($do
    [date %full-date]
    [($try ($or
-           ($c #\T)
+           ($one-of #[tT])
            ;; Section 5.6 NOTE
            ($c #\space)))]
    [time %full-time]
