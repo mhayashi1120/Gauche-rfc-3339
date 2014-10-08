@@ -33,6 +33,10 @@
 (date-should (date 2014 1 2 3 4 5 0 32400)  (rfc3339-date->date "2014-01-02T03:04:05+09:00"))
 (date-should (date 2014 1 2 3 4 5 0 -35400) (rfc3339-date->date "2014-01-02T03:04:05-09:50"))
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02t03:04:05z"))
+(date-should (date 2014 1 2 3 4 5 100 0)    (rfc3339-date->date "2014-01-02t03:04:05.1Z"))
+(date-should (date 2014 1 2 3 4 5 100 0)    (rfc3339-date->date "2014-01-02t03:04:05.10Z"))
+(date-should (date 2014 1 2 3 4 5 100 0)    (rfc3339-date->date "2014-01-02t03:04:05.100Z"))
+(date-should (date 2014 1 2 3 4 5 1 0)      (rfc3339-date->date "2014-01-02t03:04:05.001Z"))
 
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02 03:04:05Z"))
 
