@@ -46,7 +46,7 @@
 (cf-echo (cf$ 'PACKAGE_VERSION) > "VERSION")
 (debug-print-width #f)
 
-;;FIXME
+;;FIXME trunk version has (cf-make-gpd)
 (use gauche.process)
 (cf-echo #"creating ~gpd-file")
 (run-process
