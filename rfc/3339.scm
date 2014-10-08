@@ -151,7 +151,9 @@
           (display "Z")]
          [else
           (receive (h s) (div-and-mod zone (* 60 60))
-            (format #t "~a~2,'0d:~2,'0d"
-                    (if (< h 0) #\- #\+)
-                    (abs h) (div s 60)))])))))
+            (let ([sign (if (< h 0) #\- #\+)]
+                  [hour (abs h)]
+                  [min (div s 60)])
+              (format #t "~a~2,'0d:~2,'0d"
+                      sign hour min)))])))))
 
