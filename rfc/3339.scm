@@ -40,9 +40,16 @@
   (use srfi-19)
   (use parser.peg)
   (export
+   rfc3339-parse-date
+   rfc3339-date-time-parser
+
    rfc3339-date->date
    date->rfc3339-date))
 (select-module rfc.3339)
+
+;;;
+;;; parser (peg)
+;;;
 
 (define ($digit :optional (min 0) (max #f))
   ($do
@@ -129,10 +136,21 @@
    ($return
     (match-let1 (year month day) date
       (match-let1 ((hour min sec nano) offset) time
-        (make-date nano sec min hour day month year offset))))))
+        (list year month day hour min sec offset nano))))))
+
+;;;
+;;; api
+;;;
+
+(define rfc3339-date-time-parser %date-time)
+
+(define (rfc3339-parse-date text)
+  (apply values (peg-parse-string %date-time text)))
 
 (define (rfc3339-date->date text)
-  (peg-parse-string %date-time text))
+  (receive (year month day hour min sec offset nano)
+      (rfc3339-parse-date text)
+    (make-date nano sec min hour day month year offset)))
 
 (define (date->rfc3339-date date :optional (zone 0))
   (let1 d (time-utc->date (date->time-utc (current-date)) zone)
