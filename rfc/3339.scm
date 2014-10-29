@@ -153,12 +153,12 @@
     (make-date nano sec min hour day month year offset)))
 
 (define (date->rfc3339-date date :optional (zone 0))
-  (let1 d (time-utc->date (date->time-utc (current-date)) zone)
+  (let1 d (time-utc->date (date->time-utc date) zone)
     (with-output-to-string
       (^()
         (display (date->string d "~Y-~m-~dT~H:~M:~S"))
         (display ".")
-        (format #t "~d" (div (slot-ref d 'nanosecond) 10000000))
+        (format #t "~2,'0d" (div (slot-ref d 'nanosecond) 10000000))
         (cond
          [(= zone 0)
           (display "Z")]

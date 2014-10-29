@@ -40,6 +40,8 @@
 
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02 03:04:05Z"))
 
+(should "2014-01-02T03:04:05.00Z"      (date->rfc3339-date (rfc3339-date->date "2014-01-02 03:04:05Z")))
+
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
 (test-end :exit-on-failure #t)
