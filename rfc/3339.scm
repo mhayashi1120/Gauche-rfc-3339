@@ -152,21 +152,28 @@
       (rfc3339-parse-date text)
     (make-date nano sec min hour day month year offset)))
 
-(define (date->rfc3339-date date :optional (zone 0))
-  (let1 d (time-utc->date (date->time-utc date) zone)
+(define (date->rfc3339-date date :key (suppress-ms? #f) (suppress-tz-colon? #f)
+                            (zone-offset 0))
+  (let1 d (time-utc->date (date->time-utc date) zone-offset)
     (with-output-to-string
       (^()
         (display (date->string d "~Y-~m-~dT~H:~M:~S"))
-        (display ".")
-        (format #t "~2,'0d" (div (slot-ref d 'nanosecond) 10000000))
+        (unless suppress-ms?
+          (display ".")
+          (format #t "~2,'0d" (div (slot-ref d 'nanosecond) 10000000)))
         (cond
-         [(= zone 0)
+         [(equal? zone-offset 0)
           (display "Z")]
-         [else
-          (receive (h s) (div-and-mod zone (* 60 60))
+         [(integer? zone-offset)
+          (receive (h s) (div-and-mod zone-offset (* 60 60))
             (let ([sign (if (< h 0) #\- #\+)]
                   [hour (abs h)]
                   [min (div s 60)])
-              (format #t "~a~2,'0d:~2,'0d"
-                      sign hour min)))])))))
+              (format #t "~a" sign)
+              (format #t "~2,'0d" hour)
+              (unless suppress-tz-colon?
+                (format #t ":"))
+              (format #t "~2,'0d" min)))]
+         [else
+          (errorf "zone-offset: ~a is not supported" zone-offset)])))))
 
