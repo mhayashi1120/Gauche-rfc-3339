@@ -85,15 +85,30 @@
 ;; time-numoffset  = ("+" / "-") time-hour ":" time-minute
 ;; time-offset     = "Z" / time-numoffset
 (define %time-nummoffset
-  ($do
-   [sign ($try ($or ($c #\+) ($c #\-)))]
-   [hour ($digit 2)]
-   [($c #\:)]
-   [minute ($digit 2)]
-   ($return
-    (*
-     (if (equal? sign #\+) 1 -1)
-     (+ (* hour 60 60) (* minute 60))))))
+  (let1 %time
+      ($or
+       ($try 
+        ($do
+         [hour ($digit 1 2)]
+         [($c #\:)]
+         [minute ($digit 1 2)]
+         [$return (list hour minute)]))
+       ;; extend format can omit `:'
+       ($try
+        ($do
+         [h&m ($digit 3 4)]
+         [$return
+          (receive (hour minute)
+              (div-and-mod h&m 100)
+            (list hour minute))])))
+    ($do
+     [sign ($or ($c #\+) ($c #\-))]
+     [hour&min %time]
+     ($return
+      (match-let1 (hour minute) hour&min
+        (*
+         (if (equal? sign #\+) 1 -1)
+         (+ (* hour 60 60) (* minute 60))))))))
 
 (define %time-offset
   ($try
