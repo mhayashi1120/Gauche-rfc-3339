@@ -45,6 +45,9 @@
 
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02 03:04:05Z"))
 
+(date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02 03:04:05 Z"))
+(date-should (date 2014 1 2 3 4 5 0 32400)  (rfc3339-date->date "2014-01-02 03:04:05 +0900"))
+
 (should "2014-01-02T03:04:05.00Z" (date->rfc3339-date (rfc3339-date->date "2014-01-02 03:04:05Z")))
 
 (should "2014-01-02T03:04:05Z"(date->rfc3339-date (rfc3339-date->date "2014-01-02T03:04:05Z")

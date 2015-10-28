@@ -84,7 +84,7 @@
 
 ;; time-numoffset  = ("+" / "-") time-hour ":" time-minute
 ;; time-offset     = "Z" / time-numoffset
-(define %time-nummoffset
+(define %time-numoffset
   (let1 %time
       ($or
        ($try 
@@ -114,7 +114,7 @@
   ($try
    ($or
     ($do [($one-of #[zZ])] ($return 0))
-    %time-nummoffset)))
+    %time-numoffset)))
 
 ;; time-hour       = 2DIGIT  ; 00-23
 ;; time-minute     = 2DIGIT  ; 00-59
@@ -136,6 +136,8 @@
 (define %full-time
   ($do
    [time %partial-time]
+   ;; extend format can insert `space'
+   [($many ($c #\space))]
    [offset %time-offset]
    ($return (list time offset))))
 
