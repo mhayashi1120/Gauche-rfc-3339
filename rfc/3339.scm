@@ -74,13 +74,13 @@
 (define %time-secfrac
   ($do
    [($c #\.)]
-   [frac ($many digit 1 3)]
+   [frac ($many digit 1 9)]
    ($return
     (let* ([s (rope->string frac)]
-           [text (string-pad-right s 3 #\0)]
+           [text (string-pad-right s 9 #\0)]
            [n (string->number text)])
       ;; nanosecond
-      (* n 1000000)))))
+      n))))
 
 ;; time-numoffset  = ("+" / "-") time-hour ":" time-minute
 ;; time-offset     = "Z" / time-numoffset
@@ -169,15 +169,23 @@
       (rfc3339-parse-date text)
     (make-date nano sec min hour day month year offset)))
 
-(define (date->rfc3339-date date :key (suppress-ms? #f) (suppress-tz-colon? #f)
-                            (zone-offset 0))
+(define (date->rfc3339 date type :key (suppress-tz-colon? #f)
+                       (zone-offset 0) (datetime-separator #\T))
   (let1 d (time-utc->date (date->time-utc date) zone-offset)
     (with-output-to-string
       (^()
-        (display (date->string d "~Y-~m-~dT~H:~M:~S"))
-        (unless suppress-ms?
-          (display ".")
-          (format #t "~2,'0d" (div (slot-ref d 'nanosecond) 10000000)))
+        (display (date->string d "~Y-~m-~d"))
+        (display datetime-separator)
+        (when (memq type '(seconds ms milli micro nano ns))
+          (display (date->string d "~H:~M:~S")))
+        (cond
+         [(memq type '(ms milli))
+          ;; TODO?? not 2, 3 is correct?
+          (format #t ".~2,'0d" (div (slot-ref d 'nanosecond) 10000000))]
+         [(memq type '(micro))
+          (format #t ".~6,'0d" (div (slot-ref d 'nanosecond) 10000))]
+         [(memq type '(ns nano))
+          (format #t ".~9,'0d" (slot-ref d 'nanosecond))])
         (cond
          [(equal? zone-offset 0)
           (display "Z")]
@@ -193,4 +201,19 @@
               (format #t "~2,'0d" min)))]
          [else
           (errorf "zone-offset: ~a is not supported" zone-offset)])))))
+
+(define (date->rfc3339-date date :key
+                            (suppress-ms? #f)
+                            (suppress-tz-colon? #f)
+                            (zone-offset 0))
+  (let ([converter
+         (^ (type)
+           (date->rfc3339 date type
+                          :suppress-tz-colon? suppress-tz-colon?
+                          :zone-offset zone-offset))])
+    (cond
+     [suppress-ms?
+      (converter 'seconds)]
+     [else
+      (converter 'milli)])))
 
