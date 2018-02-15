@@ -43,9 +43,19 @@
    rfc3339-parse-date
    rfc3339-date-time-parser
 
+   date->rfc3339
+
    rfc3339-date->date
    date->rfc3339-date))
 (select-module rfc.3339)
+
+;;;
+;;; Utility
+;;;
+
+(define (current-zone-offset)
+  (date-zone-offset (current-date)))
+
 
 ;;;
 ;;; parser (peg)
@@ -83,11 +93,10 @@
       n))))
 
 ;; time-numoffset  = ("+" / "-") time-hour ":" time-minute
-;; time-offset     = "Z" / time-numoffset
 (define %time-numoffset
   (let1 %time
       ($or
-       ($try 
+       ($try
         ($do
          [hour ($digit 1 2)]
          [($c #\:)]
@@ -110,6 +119,7 @@
          (if (equal? sign #\+) 1 -1)
          (+ (* hour 60 60) (* minute 60))))))))
 
+;; time-offset     = "Z" / time-numoffset
 (define %time-offset
   ($try
    ($or
@@ -131,15 +141,17 @@
    [sec ($digit 1 2)]
    [frac ($optional %time-secfrac 0)]
    ($return (list hour min sec frac))))
-   
+
 ;; full-time       = partial-time time-offset
 (define %full-time
   ($do
    [time %partial-time]
    ;; extend format can insert `space'
    [($many ($c #\space))]
-   [offset %time-offset]
-   ($return (list time offset))))
+   [offset ($optional %time-offset)]
+   ($return
+    (list time
+          (or offset (current-zone-offset))))))
 
 ;; date-time       = full-date "T" full-time
 (define %date-time
@@ -169,51 +181,119 @@
       (rfc3339-parse-date text)
     (make-date nano sec min hour day month year offset)))
 
-(define (date->rfc3339 date type :key (suppress-tz-colon? #f)
-                       (zone-offset 0) (datetime-separator #\T))
-  (let1 d (time-utc->date (date->time-utc date) zone-offset)
-    (with-output-to-string
-      (^()
-        (display (date->string d "~Y-~m-~d"))
-        (display datetime-separator)
-        (when (memq type '(seconds ms milli micro nano ns))
-          (display (date->string d "~H:~M:~S")))
-        (cond
-         [(memq type '(ms milli))
-          ;; TODO?? not 2, 3 is correct?
-          (format #t ".~2,'0d" (div (slot-ref d 'nanosecond) 10000000))]
-         [(memq type '(micro))
-          (format #t ".~6,'0d" (div (slot-ref d 'nanosecond) 10000))]
-         [(memq type '(ns nano))
-          (format #t ".~9,'0d" (slot-ref d 'nanosecond))])
-        (cond
-         [(equal? zone-offset 0)
-          (display "Z")]
-         [(integer? zone-offset)
-          (receive (h s) (div-and-mod zone-offset (* 60 60))
-            (let ([sign (if (< h 0) #\- #\+)]
-                  [hour (abs h)]
-                  [min (div s 60)])
-              (format #t "~a" sign)
-              (format #t "~2,'0d" hour)
-              (unless suppress-tz-colon?
-                (format #t ":"))
-              (format #t "~2,'0d" min)))]
-         [else
-          (errorf "zone-offset: ~a is not supported" zone-offset)])))))
+;; datetime-separator: Print datetime with selected separator
+;;     (e.g. #\space -> "2018-01-02 01:02:03Z") (Default "T")
+;; suppress-time?: Suppress to print TIME spec.
+;;     (e.g. "2018-01-02")
+;; fraction-behavior: `round' / `ceiling' / `floor' / `midpointup' (Default: floor)
+;;     First three symbols are same as gauche procedure.
+;;     round (e.g. 0.0<=x<=0.5 = 0, 0.5<x<1.5 = 1, 1.5<=x<=2.5 = 2)
+;;     midpointup is differ about 0.5 fraction. (e.g. 0.0<=x<0.5 = 0, 0.5<=x<1.5 = 1)
+;; sec-precision: Precision of the seconds.
+;;     Integer (<= 0 x 9) / seconds / second / deci / centi / ms / milli / micro / nano / ns
+;; suppress-tz-colon?: Suppress to print zone-offset colon.
+;; zone-offset: Print with specified timezone.
+;;     Integer / String / `UTC' / `keep' / 'locale' / #f (Default: UTC)
+;;     keep: Using DATE's zone-offset.
+;;     UTC: print with "Z" suffix
+;;     locale: print with current locale timezone.
+;;     Integer: Convert DATE's zone-offset to the value.
+;;     String: Print asis with keep DATE zone-offset
+(define (rfc3339-print-date date :key (datetime-separator #\T)
+                            (suppress-time? #f)
+                            (fraction-behavior 'floor) (sec-precision 2)
+                            (suppress-tz-colon? #f) (zone-offset 'UTC))
+  (define (ensure-secfrac arg)
+    (cond
+     [(memq arg '(seconds second)) 0]
+     [(memq arg '(deci)) 1]
+     [(memq arg '(centi)) 2]
+     [(memq arg '(ms milli)) 3]
+     [(memq arg '(micro)) 6]
+     [(memq arg '(nano ns)) 9]
+     [(and (number? arg) (<= 0 arg 9)) arg]
+     [else
+      (error "Not a supported SECFRAC-LENGTH" arg)]))
+
+  (define (secfrac-handler arg)
+    (ecase fraction-behavior
+      ['floor floor->exact]
+      ['round round->exact]
+      ['ceiling ceiling->exact]
+      ['midpointup (^x (floor->exact (+ x 1/2)))]))
+
+  (define (ensure-timezone arg date)
+    (cond
+     [(memq arg '(locale #f)) (date-zone-offset (current-date))]
+     [(or (memq arg '(keep #f))
+          (string? arg))
+      (date-zone-offset date)]
+     [(integer? arg) arg]
+     [(eq? arg 'UTC) 0]
+     [else
+      (error "Not a supported offset" arg)]))
+
+  (define (convert-zone-offset date tz-offset)
+    (time-utc->date (date->time-utc date) tz-offset))
+
+  (let* ([tz-offset (ensure-timezone zone-offset date)]
+         [d (convert-zone-offset date tz-offset)]
+         [frac-length (ensure-secfrac sec-precision)])
+    (display (date->string d "~Y-~m-~d"))
+    (display datetime-separator)
+    (unless suppress-time?
+      (display (date->string d "~H:~M:"))
+      (let* ([sec (date-second d)]
+             [secfrac (/ (date-nanosecond d) (expt 10 9))]
+             [real-sec (+ sec secfrac)]
+             [rounder (secfrac-handler fraction-behavior)])
+        (if (> frac-length 0)
+          (format #t "~2,'0d" sec)
+          (let ([sec-value (rounder real-sec)])
+            (format #t "~2,'0d" sec-value)))
+        (when (> frac-length 0)
+          (display ".")
+          (let* ([fmt #`"~,|frac-length|,,'0d"]
+                 [frac-value (rounder (* secfrac (expt 10 frac-length)))])
+            (format #t fmt frac-value)))))
+    (cond
+     [(eq? zone-offset #f)]
+     [(eq? zone-offset 'UTC)
+      (display "Z")]
+     [(or (integer? zone-offset)
+          (memq zone-offset '(locale keep)))
+      (receive (h s) (div-and-mod tz-offset (* 60 60))
+        (let ([sign (if (< h 0) #\- #\+)]
+              [hour (abs h)]
+              [min (div s 60)])
+          (format #t "~a" sign)
+          (format #t "~2,'0d" hour)
+          (unless suppress-tz-colon?
+            (format #t ":"))
+          (format #t "~2,'0d" min)))]
+     [(string? zone-offset)
+      (display zone-offset)]
+     [else
+      (errorf "zone-offset: ~a is not supported" zone-offset)])))
+
+;; Utility function wrap `rfc3339-print-date' . KEYWORDS is passed to the function.
+(define (date->rfc3339 date . keywords)
+  (with-output-to-string
+    (^() (apply rfc3339-print-date date keywords))))
 
 (define (date->rfc3339-date date :key
                             (suppress-ms? #f)
-                            (suppress-tz-colon? #f)
-                            (zone-offset 0))
-  (let ([converter
-         (^ (type)
-           (date->rfc3339 date type
-                          :suppress-tz-colon? suppress-tz-colon?
-                          :zone-offset zone-offset))])
+                            :allow-other-keys keywords)
+  (let1 converter
+      (^ (fraction-length)
+        (apply date->rfc3339
+               date
+               :sec-precision fraction-length
+               keywords))
     (cond
      [suppress-ms?
       (converter 'seconds)]
      [else
-      (converter 'milli)])))
+      ;; RFC 3339 document only explicitly mention about 2 digit.
+      (converter 2)])))
 
