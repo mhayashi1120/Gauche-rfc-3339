@@ -58,13 +58,16 @@
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02 03:04:05 Z"))
 (date-should (date 2014 1 2 3 4 5 0 32400)  (rfc3339-date->date "2014-01-02 03:04:05 +0900"))
 
-(should "2014-01-02T03:04:05.00Z" (date->rfc3339-date (rfc3339-date->date "2014-01-02 03:04:05Z")))
+(should "2014-01-02T03:04:05.00Z"
+        (date->rfc3339-date (rfc3339-date->date "2014-01-02 03:04:05Z")))
 
-(should "2014-01-02T03:04:05Z"(date->rfc3339-date (rfc3339-date->date "2014-01-02T03:04:05Z")
-                                                  :suppress-ms? #t))
-(should "2014-01-02T12:04:05+0900" (date->rfc3339-date (rfc3339-date->date "2014-01-02T03:04:05Z")
-                                                       :suppress-ms? #t :suppress-tz-colon? #t
-                                                       :zone-offset 32400))
+(should "2014-01-02T03:04:05Z"
+        (date->rfc3339-date (rfc3339-date->date "2014-01-02T03:04:05Z")
+                            :suppress-ms? #t))
+(should "2014-01-02T12:04:05+0900"
+        (date->rfc3339-date (rfc3339-date->date "2014-01-02T03:04:05Z")
+                            :suppress-ms? #t :suppress-tz-colon? #t
+                            :zone-offset 32400))
 
 (should "2014-01-02T03:14:06.00+00:10"
         (date->rfc3339-date (rfc3339-date->date "2014-01-02 03:04:05Z")
@@ -72,6 +75,31 @@
 (should "2014-01-02T03:14:06.00+0010"
         (date->rfc3339-date (rfc3339-date->date "2014-01-02 03:04:05Z")
                             :zone-offset 601 :suppress-tz-colon? #t))
+
+;; TODO tested only JP timezone. improve test
+(should "2014-01-02T12:04:05.00"
+        (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
+                            :zone-offset #f))
+
+(should "2014-01-02T03:04:05.00+00:00"
+        (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
+                            :zone-offset 'keep))
+
+(should "2014-01-02T12:04:05.00+09:00"
+        (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
+                            :zone-offset 'locale))
+
+(should "2014-01-02T03:04:05.00Z"
+        (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
+                            :zone-offset 'UTC))
+
+(should "2014-01-02T09:04:05.00+06:00"
+        (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
+                            :zone-offset (* 6 60 60)))
+
+(should "2014-01-02T03:04:05.00 JST"
+        (date->rfc3339-date (date 2014 01 02 03 04 05 0 32400)
+                            :zone-offset " JST"))
 
 (let ([fracsec-date (rfc3339-date->date "2014-01-02 03:04:05.555555555Z")])
   (should "2014-01-02T03:04:05.55Z"

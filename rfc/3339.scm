@@ -193,12 +193,13 @@
 ;;     Integer (<= 0 x 9) / seconds / second / deci / centi / ms / milli / micro / nano / ns
 ;; suppress-tz-colon?: Suppress to print zone-offset colon.
 ;; zone-offset: Print with specified timezone.
-;;     Integer / String / `UTC' / `keep' / 'locale' / #f (Default: UTC)
+;;     `UTC' / `keep' / 'locale' / Integer / String / #f
 ;;     keep: Using DATE's zone-offset.
-;;     UTC: print with "Z" suffix
+;;     UTC: print with "Z" suffix (Default)
 ;;     locale: print with current locale timezone.
 ;;     Integer: Convert DATE's zone-offset to the value.
-;;     String: Print asis with keep DATE zone-offset
+;;     String: Print asis with keep DATE zone-offset. This imply `keep'.
+;;     #f: suppress timezone
 (define (rfc3339-print-date date :key (datetime-separator #\T)
                             (suppress-time? #f)
                             (fraction-behavior 'floor) (sec-precision 2)
