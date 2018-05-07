@@ -50,14 +50,6 @@
 (select-module rfc.3339)
 
 ;;;
-;;; Utility
-;;;
-
-(define (current-zone-offset)
-  (date-zone-offset (current-date)))
-
-
-;;;
 ;;; parser (peg)
 ;;;
 
@@ -150,8 +142,7 @@
    [($many ($c #\space))]
    [offset ($optional %time-offset)]
    ($return
-    (list time
-          (or offset (current-zone-offset))))))
+    (list time offset))))
 
 ;; date-time       = full-date "T" full-time
 (define %date-time
@@ -168,6 +159,13 @@
         (list year month day hour min sec offset nano))))))
 
 ;;;
+;;; Utility
+;;;
+
+(define (current-zone-offset)
+  (date-zone-offset (current-date)))
+
+;;;
 ;;; api
 ;;;
 
@@ -179,26 +177,28 @@
 (define (rfc3339-date->date text)
   (receive (year month day hour min sec offset nano)
       (rfc3339-parse-date text)
-    (make-date nano sec min hour day month year offset)))
+    (make-date nano sec min hour day month year
+               (or offset (current-zone-offset)))))
 
-;; datetime-separator: Print datetime with selected separator
-;;     (e.g. #\space -> "2018-01-02 01:02:03Z") (Default "T")
+;; datetime-separator: Print datetime with selected separator (Default: #\T)
+;;     (e.g. #\space -> "2018-01-02 01:02:03Z")
 ;; suppress-time?: Suppress to print TIME spec.
 ;;     (e.g. "2018-01-02")
 ;; fraction-behavior: `round' / `ceiling' / `floor' / `midpointup' (Default: floor)
 ;;     First three symbols are same as gauche procedure.
-;;     round (e.g. 0.0<=x<=0.5 = 0, 0.5<x<1.5 = 1, 1.5<=x<=2.5 = 2)
-;;     midpointup is differ about 0.5 fraction. (e.g. 0.0<=x<0.5 = 0, 0.5<=x<1.5 = 1)
-;; sec-precision: Precision of the seconds.
+;;     round (e.g. 0.0<=x<=0.5 => 0, 0.5<x<1.5 => 1, 1.5<=x<=2.5 => 2)
+;;     midpointup is differ about 0.5 fraction. (e.g. 0.0<=x<0.5 => 0, 0.5<=x<1.5 => 1)
+;;     This fraction is mentioned in 5.3. Rarely Used Options
+;; sec-precision: Precision of the seconds. (Default: 2)
 ;;     Integer (<= 0 x 9) / seconds / second / deci / centi / ms / milli / micro / nano / ns
 ;; suppress-tz-colon?: Suppress to print zone-offset colon.
-;; zone-offset: Print with specified timezone.
+;; zone-offset: Print with specified timezone. (Default: UTC)
 ;;     `UTC' / `keep' / 'locale' / Integer / String / #f
+;;     UTC: print with "Z" suffix.
 ;;     keep: Using DATE's zone-offset.
-;;     UTC: print with "Z" suffix (Default)
 ;;     locale: print with current locale timezone.
 ;;     Integer: Convert DATE's zone-offset to the value.
-;;     String: Print asis with keep DATE zone-offset. This imply `keep'.
+;;     String: Print timezone asis. This imply `keep' zone-offset.
 ;;     #f: suppress timezone
 (define (rfc3339-print-date date :key (datetime-separator #\T)
                             (suppress-time? #f)
