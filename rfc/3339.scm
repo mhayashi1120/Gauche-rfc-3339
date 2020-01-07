@@ -49,6 +49,9 @@
    date->rfc3339-date))
 (select-module rfc.3339)
 
+(define $c $char)
+(define digit ($one-of #[0-9]))
+
 ;;;
 ;;; parser (peg)
 ;;;
