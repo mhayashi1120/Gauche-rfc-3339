@@ -45,6 +45,8 @@ all : $(TARGET)
 check : all
 	@rm -f test.log
 	$(GOSH) -I. -I$(srcdir) $(srcdir)/test.scm > test.log
+	TZ=JST-9 $(GOSH) -I. -I$(srcdir) $(srcdir)/test-JST.scm >> test.log
+	TZ= $(GOSH) -I. -I$(srcdir) $(srcdir)/test-UTC.scm >> test.log
 
 install : all
 	$(INSTALL) -m 444 -T $(GAUCHE_PKGINCDIR) $(HEADERS)

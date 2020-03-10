@@ -9,32 +9,7 @@
 (use rfc.3339)
 (test-module 'rfc.3339)
 
-(define (date=? d1 d2)
-  (let loop ([slots (class-slots <date>)])
-    (cond
-     [(null? slots) #t]
-     [(not (equal? (~ d1(caar slots)) (~ d2(caar slots))))
-      #f]
-     [else
-      (loop (cdr slots))])))
-
-;; Utility for easy to compare text.
-(define (date y m d H M S MS offset)
-  (make-date (* MS 1000000) S M H d m y offset))
-
-(define (daten y m d H M S NS offset)
-  (make-date NS S M H d m y offset))
-
-(define (should expected result :optional (msg #f))
-  (test* (or msg (x->string expected))
-         expected result))
-
-(define (date-should expected result :optional (msg #f))
-  (test* (or msg expected)
-         expected result date=?))
-
-(define (current-timezone)
-  (date-zone-offset (current-date)))
+(load "testlib.scm")
 
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02T03:04:05Z"))
 (date-should (date 2014 1 2 3 4 5 0 32400)  (rfc3339-date->date "2014-01-02T03:04:05+09:00"))
@@ -76,18 +51,9 @@
         (date->rfc3339-date (rfc3339-date->date "2014-01-02 03:04:05Z")
                             :zone-offset 601 :suppress-tz-colon? #t))
 
-;; TODO tested only JP timezone. improve test
-(should "2014-01-02T12:04:05.00"
-        (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
-                            :zone-offset #f))
-
 (should "2014-01-02T03:04:05.00+00:00"
         (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
                             :zone-offset 'keep))
-
-(should "2014-01-02T12:04:05.00+09:00"
-        (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
-                            :zone-offset 'locale))
 
 (should "2014-01-02T03:04:05.00Z"
         (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
@@ -100,6 +66,7 @@
 (should "2014-01-02T03:04:05.00 JST"
         (date->rfc3339-date (date 2014 01 02 03 04 05 0 32400)
                             :zone-offset " JST"))
+
 
 (let ([fracsec-date (rfc3339-date->date "2014-01-02 03:04:05.555555555Z")])
   (should "2014-01-02T03:04:05.55Z"
