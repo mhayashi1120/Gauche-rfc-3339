@@ -132,10 +132,20 @@
    [hour ($digit 1 2)]
    [($c #\:)]
    [min ($digit 1 2)]
-   [($c #\:)]
-   [sec ($digit 1 2)]
-   [frac ($optional %time-secfrac 0)]
-   ($return (list hour min sec frac))))
+   [maybe-sec
+    ;; Not mentioned about second part is optional, but accept.
+    ($optional
+     ($do
+      [($c #\:)]
+      [sec ($digit 1 2)]
+      [frac ($optional %time-secfrac)]
+      [$return (list sec frac)]))]
+   ($return
+    (match maybe-sec
+      [(sec frac)
+       (list hour min sec frac)]
+      [else
+       (list hour min #f #f)]))))
 
 ;; full-time       = partial-time time-offset
 (define %full-time
@@ -180,7 +190,8 @@
 (define (rfc3339-date->date text)
   (receive (year month day hour min sec offset nano)
       (rfc3339-parse-date text)
-    (make-date nano sec min hour day month year
+    (make-date (or nano 0) (or sec 0)
+               min hour day month year
                (or offset (current-zone-offset)))))
 
 ;; datetime-separator: Print datetime with selected separator (Default: #\T)

@@ -18,4 +18,8 @@
         (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
                             :zone-offset 'locale))
 
+(date-should
+ (date 2020 01 02 03 04 00 0 32400)
+ (rfc3339-date->date "2020-01-02t03:04"))
+
 (test-end :exit-on-failure #t)

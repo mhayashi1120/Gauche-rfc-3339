@@ -24,6 +24,7 @@
 (date-should (date 2014 1 2 3 4 5 100 0)    (rfc3339-date->date "2014-01-02t03:04:05.10Z"))
 (date-should (date 2014 1 2 3 4 5 100 0)    (rfc3339-date->date "2014-01-02t03:04:05.100Z"))
 (date-should (date 2014 1 2 3 4 5 1 0)      (rfc3339-date->date "2014-01-02t03:04:05.001Z"))
+(date-should (date 2014 1 2 3 4 0 0 0)      (rfc3339-date->date "2014-01-02t03:04Z"))
 (date-should (daten 2014 1 2 3 4 5 555555555 0)      (rfc3339-date->date "2014-01-02t03:04:05.555555555Z"))
 
 (date-should (date 2014 1 2 3 4 5 1 (current-timezone)) (rfc3339-date->date "2014-01-02t03:04:05.001"))
