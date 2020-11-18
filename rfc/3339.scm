@@ -150,21 +150,22 @@
 ;; full-time       = partial-time time-offset
 (define %full-time
   ($do
-   [time %partial-time]
+   [time ($optional %partial-time)]
    ;; extend format can insert `space'
    [($many ($c #\space))]
    [offset ($optional %time-offset)]
    ($return
-    (list time offset))))
+    (list (or time (list #f #f #f #f)) offset))))
 
 ;; date-time       = full-date "T" full-time
 (define %date-time
   ($do
    [date %full-date]
-   [($try ($or
-           ($one-of #[tT])
-           ;; Section 5.6 NOTE
-           ($c #\space)))]
+   [($optional
+     ($try ($or
+            ($one-of #[tT])
+            ;; Section 5.6 NOTE
+            ($c #\space))))]
    [time %full-time]
    ($return
     (match-let1 (year month day) date
@@ -191,7 +192,7 @@
   (receive (year month day hour min sec offset nano)
       (rfc3339-parse-date text)
     (make-date (or nano 0) (or sec 0)
-               min hour day month year
+               (or min 0) (or hour 0) day month year
                (or offset (current-zone-offset)))))
 
 ;; datetime-separator: Print datetime with selected separator (Default: #\T)
