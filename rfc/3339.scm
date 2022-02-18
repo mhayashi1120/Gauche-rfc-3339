@@ -57,8 +57,8 @@
 ;;;
 
 (define ($digit :optional (min 0) (max #f))
-  ($do
-   [s ($many digit min max)]
+  ($let
+   ([s ($many digit min max)])
    ($return (string->number (rope->string s)))))
 
 ;; date-fullyear   = 4DIGIT
@@ -67,19 +67,19 @@
 ;;                           ; month/year
 ;; full-date       = date-fullyear "-" date-month "-" date-mday
 (define %full-date
-  ($do
-   [fullyear ($digit 4)]
-   [($c #\-)]
-   [month ($digit 2)]
-   [($c #\-)]
-   [day ($digit 2)]
+  ($let
+   ([fullyear ($digit 4)]
+    [($c #\-)]
+    [month ($digit 2)]
+    [($c #\-)]
+    [day ($digit 2)])
    ($return (list fullyear month day))))
 
 ;; time-secfrac    = "." 1*DIGIT
 (define %time-secfrac
-  ($do
-   [($c #\.)]
-   [frac ($many digit 1 9)]
+  ($let
+   ([($c #\.)]
+    [frac ($many digit 1 9)])
    ($return
     (let* ([s (rope->string frac)]
            [text (string-pad-right s 9 #\0)]
@@ -92,22 +92,22 @@
   (let1 %time
       ($or
        ($try
-        ($do
-         [hour ($digit 1 2)]
-         [($c #\:)]
-         [minute ($digit 1 2)]
-         [$return (list hour minute)]))
+        ($let
+         ([hour ($digit 1 2)]
+          [($c #\:)]
+          [minute ($digit 1 2)])
+         ($return (list hour minute))))
        ;; extend format can omit `:'
        ($try
-        ($do
-         [h&m ($digit 3 4)]
-         [$return
+        ($let
+         ([h&m ($digit 3 4)])
+         ($return
           (receive (hour minute)
               (div-and-mod h&m 100)
-            (list hour minute))])))
-    ($do
-     [sign ($or ($c #\+) ($c #\-))]
-     [hour&min %time]
+            (list hour minute))))))
+    ($let
+     ([sign ($or ($c #\+) ($c #\-))]
+      [hour&min %time])
      ($return
       (match-let1 (hour minute) hour&min
         (*
@@ -118,7 +118,8 @@
 (define %time-offset
   ($try
    ($or
-    ($do [($one-of #[zZ])] ($return 0))
+    ($let ([($one-of #[zZ])])
+          ($return 0))
     %time-numoffset)))
 
 ;; time-hour       = 2DIGIT  ; 00-23
@@ -128,18 +129,18 @@
 ;; partial-time    = time-hour ":" time-minute ":" time-second
 ;;                   [time-secfrac]
 (define %partial-time
-  ($do
-   [hour ($digit 1 2)]
-   [($c #\:)]
-   [min ($digit 1 2)]
-   [maybe-sec
-    ;; Not mentioned about second part is optional, but accept.
-    ($optional
-     ($do
-      [($c #\:)]
-      [sec ($digit 1 2)]
-      [frac ($optional %time-secfrac)]
-      [$return (list sec frac)]))]
+  ($let
+   ([hour ($digit 1 2)]
+    [($c #\:)]
+    [min ($digit 1 2)]
+    [maybe-sec
+     ;; Not mentioned about second part is optional, but accept.
+     ($optional
+      ($let
+       ([($c #\:)]
+        [sec ($digit 1 2)]
+        [frac ($optional %time-secfrac)])
+       ($return (list sec frac))))])
    ($return
     (match maybe-sec
       [(sec frac)
@@ -149,24 +150,24 @@
 
 ;; full-time       = partial-time time-offset
 (define %full-time
-  ($do
-   [time ($optional %partial-time)]
-   ;; extend format can insert `space'
-   [($many ($c #\space))]
-   [offset ($optional %time-offset)]
+  ($let
+   ([time ($optional %partial-time)]
+    ;; extend format can insert `space'
+    [($many ($c #\space))]
+    [offset ($optional %time-offset)])
    ($return
     (list (or time (list #f #f #f #f)) offset))))
 
 ;; date-time       = full-date "T" full-time
 (define %date-time
-  ($do
-   [date %full-date]
-   [($optional
-     ($try ($or
-            ($one-of #[tT])
-            ;; Section 5.6 NOTE
-            ($c #\space))))]
-   [time %full-time]
+  ($let
+   ([date %full-date]
+    [($optional
+      ($try ($or
+             ($one-of #[tT])
+             ;; Section 5.6 NOTE
+             ($c #\space))))]
+    [time %full-time])
    ($return
     (match-let1 (year month day) date
       (match-let1 ((hour min sec nano) offset) time
