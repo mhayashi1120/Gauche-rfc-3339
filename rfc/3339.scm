@@ -181,14 +181,23 @@
   (date-zone-offset (current-date)))
 
 ;;;
-;;; api
+;;; # API
 ;;;
 
+;; ## <DATETIME-PARTS>
+;;
+;; <DATETIME-PARTS> ::= (YEAR:<integer> MONTH:<integer> DAY:<integer>
+;;                       HOUR:<integer> MINUTE:<integer> SECOND:<integer>
+;;                       TZ-OFFSET:<integer> NANO:<integer>)
+
+;; ## <peg-parser <DATETIME-PARTS>>
 (define rfc3339-date-time-parser %date-time)
 
+;; ## -> [...<DATETIME-PARTS>]
 (define (rfc3339-parse-date text)
   (apply values (peg-parse-string %date-time text)))
 
+;; ## <string> -> <date>
 (define (rfc3339-date->date text)
   (receive (year month day hour min sec offset nano)
       (rfc3339-parse-date text)
@@ -196,19 +205,20 @@
                (or min 0) (or hour 0) day month year
                (or offset (current-zone-offset)))))
 
-;; datetime-separator: Print datetime with selected separator (Default: #\T)
+;; ## Print rfc3339 date.
+;; - :datetime-separator: Print datetime with selected separator (Default: #\T)
 ;;     (e.g. #\space -> "2018-01-02 01:02:03Z")
-;; suppress-time?: Suppress to print TIME spec.
+;; - :suppress-time?: Suppress to print TIME spec.
 ;;     (e.g. "2018-01-02")
-;; fraction-behavior: `round' / `ceiling' / `floor' / `midpointup' (Default: floor)
+;; - :fraction-behavior: `round' / `ceiling' / `floor' / `midpointup' (Default: floor)
 ;;     First three symbols are same as gauche procedure.
 ;;     round (e.g. 0.0<=x<=0.5 => 0, 0.5<x<1.5 => 1, 1.5<=x<=2.5 => 2)
 ;;     midpointup is differ about 0.5 fraction. (e.g. 0.0<=x<0.5 => 0, 0.5<=x<1.5 => 1)
 ;;     This fraction is mentioned in 5.3. Rarely Used Options
-;; sec-precision: Precision of the seconds. (Default: 2)
+;; - :sec-precision: Precision of the seconds. (Default: 2)
 ;;     Integer (<= 0 x 9) / seconds / second / deci / centi / ms / milli / micro / nano / ns
-;; suppress-tz-colon?: Suppress to print zone-offset colon.
-;; zone-offset: Print with specified timezone. (Default: UTC)
+;; - :suppress-tz-colon?: Suppress to print zone-offset colon.
+;; -: zone-offset: Print with specified timezone. (Default: UTC)
 ;;     `UTC' / `keep' / 'locale' / Integer / String / #f
 ;;     UTC: print with "Z" suffix.
 ;;     keep: Using DATE's zone-offset.
@@ -216,6 +226,7 @@
 ;;     Integer: Convert DATE's zone-offset to the value.
 ;;     String: Print timezone asis. This imply `keep' zone-offset.
 ;;     #f: suppress timezone
+;; -> <void>
 (define (rfc3339-print-date date :key (datetime-separator #\T)
                             (suppress-time? #f)
                             (fraction-behavior 'floor) (sec-precision 2)
@@ -293,11 +304,14 @@
      [else
       (errorf "zone-offset: ~a is not supported" zone-offset)])))
 
-;; Utility function wrap `rfc3339-print-date' . KEYWORDS is passed to the function.
+;; ## Utility function wrap `rfc3339-print-date' . KEYWORDS is passed to the function.
+;; -> <date> -> <string>
 (define (date->rfc3339 date . keywords)
   (with-output-to-string
     (^() (apply rfc3339-print-date date keywords))))
 
+;; ## Utility function.
+;; -> <date> -> <string>
 (define (date->rfc3339-date date :key
                             (suppress-ms? #f)
                             :allow-other-keys keywords)
@@ -313,4 +327,3 @@
      [else
       ;; RFC 3339 document only explicitly mention about 2 digit.
       (converter 2)])))
-
