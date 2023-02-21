@@ -99,7 +99,7 @@
           (date->rfc3339-date fracsec-date :sec-precision 0 :fraction-behavior 'round))
   (should "2014-01-02T03:04:07Z"
           (date->rfc3339-date fracsec-date :sec-precision 0 :fraction-behavior 'midpointup)))
-  
+
 (let ([fracsec-date (rfc3339-date->date "2014-01-02 03:04:05.444444444Z")])
   (should "2014-01-02T03:04:05Z"
           (date->rfc3339-date fracsec-date :sec-precision 0))
@@ -117,7 +117,3 @@
 ;; If you don't want `gosh' to exit with nonzero status even if
 ;; the test fails, pass #f to :exit-on-failure.
 (test-end :exit-on-failure #t)
-
-
-
-

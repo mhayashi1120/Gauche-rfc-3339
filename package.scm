@@ -3,7 +3,7 @@
 ;;
 
 (define-gauche-package "Gauche-rfc-3339"
-  ;; 
+  ;;
   :version "1.3.4"
 
   ;; Description of the package.  The first line is used as a short
@@ -24,7 +24,7 @@
   :providing-modules (
                       rfc.3339
                       )
-  
+
   ;; List name and contact info of authors.
   ;; e.g. ("Eva Lu Ator <eval@example.com>"
   ;;       "Alyssa P. Hacker <lisper@example.com>")
@@ -39,9 +39,7 @@
   ;; e.g. ("BSD")
   :licenses ("BSD")
 
-  ;; Homepage URL, if any.
-  ; :homepage "http://example.com/Gauche-rfc-3339/"
+  :homepage "https://github.com/mhayashi1120/Gauche-rfc-3339/"
 
-  ;; Repository URL, e.g. github
-  ; :repository "http://example.com/Gauche-rfc-3339.git"
+  :repository "https://github.com/mhayashi1120/Gauche-rfc-3339.git"
   )
