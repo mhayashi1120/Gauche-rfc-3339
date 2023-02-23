@@ -1,7 +1,7 @@
 ;;;
 ;;; rfc/3339.scm - Parse rfc3339 Timestamps
 ;;;
-;;;   Copyright (c) 2014,2020 Masahiro Hayashi <mhayashi1120@gmail.com>
+;;;   Copyright (c) 2014,2020,2023 Masahiro Hayashi <mhayashi1120@gmail.com>
 ;;;
 ;;;   Redistribution and use in source and binary forms, with or without
 ;;;   modification, are permitted provided that the following conditions
@@ -200,7 +200,6 @@
 
 ;; ## <string> -> <date>
 (define (rfc3339-date->date text)
-  (assume-type text <string>)
   (receive (year month day hour min sec offset nano)
       (rfc3339-parse-date text)
     (make-date (or nano 0) (or sec 0)
@@ -208,27 +207,27 @@
                (or offset (current-zone-offset)))))
 
 ;; ## Print rfc3339 date.
-;; - :datetime-separator: <char> Print datetime with selected separator (Default: #\T)
+;; - :datetime-separator : <char> Print datetime with selected separator (Default: #\T)
 ;;     (e.g. #\space -> "2018-01-02 01:02:03Z")
-;; - :suppress-time?: Suppress to print TIME spec.
+;; - :suppress-time? : Suppress to print TIME spec.
 ;;     (e.g. "2018-01-02")
-;; - :fraction-behavior: round | ceiling | floor (default) | midpointup
+;; - :fraction-behavior : round | ceiling | floor (default) | midpointup
 ;;     First three symbols are same as gauche procedure.
 ;;     round (e.g. 0.0<=x<=0.5 => 0, 0.5<x<1.5 => 1, 1.5<=x<=2.5 => 2)
 ;;     midpointup is differ about 0.5 fraction. (e.g. 0.0<=x<0.5 => 0, 0.5<=x<1.5 => 1)
 ;;     This fraction is mentioned in 5.3. Rarely Used Options
-;; - :sec-precision: <integer> | <symbol> Precision of the seconds. (Default: 2)
+;; - :sec-precision : <integer> | <symbol> Precision of the seconds. (Default: 2)
 ;;     <integer> (<= 0 x 9) | seconds | second | deci | centi | ms | milli | micro | nano | ns
-;; - :suppress-tz-colon?: Suppress to print zone-offset colon.
-;; - :zone-offset: Print with specified timezone. (Default: UTC)
-;;     UTC | keep | locale | <integer> | <string> | #f
-;;     UTC: print with "Z" suffix.
-;;     keep: Using DATE's zone-offset.
-;;     locale: print with current locale timezone.
-;;     Integer: Convert DATE's zone-offset to the value.
-;;     String: Print timezone asis. This imply `keep' zone-offset.
-;;     #f: suppress timezone
-;; -> <void>
+;; - :suppress-tz-colon? : Suppress to print zone-offset colon.
+;; - :zone-offset : Print with specified timezone. (Default: UTC)
+;;     Followings are supported:
+;;     - UTC: print with "Z" suffix.
+;;     - keep: Using DATE's zone-offset.
+;;     - locale: print with current locale timezone.
+;;     - <integer>: Convert DATE's zone-offset to the value.
+;;     - <string>: Print timezone as this value. This imply `keep' zone-offset.
+;;     - #f: suppress timezone
+;; <date> -> <void>
 (define (rfc3339-print-date date :key (datetime-separator #\T)
                             (suppress-time? #f)
                             (fraction-behavior 'floor) (sec-precision 2)
@@ -311,7 +310,7 @@
       (errorf "zone-offset: ~a is not supported" zone-offset)])))
 
 ;; ## Utility function wrap `rfc3339-print-date' . KEYWORDS is passed to the function.
-;; -> <date> -> <string>
+;; <date> -> <string>
 (define (date->rfc3339 date . keywords)
   (assume-type date <date>)
 
@@ -319,21 +318,28 @@
     (^() (apply rfc3339-print-date date keywords))))
 
 ;; ## Utility function.
-;; -> <date> -> <string>
+;;
+;; NOTE: almost same as `date->rfc3339`
+;;
+;; ### Arguments
+;; - :suppress-ms? : Should use `:sec-precision` instead. Remaining to keep compat.
+;;        #t same as `:sec-precision` is `seconds`
+;; <date> -> <string>
 (define (date->rfc3339-date date :key
                             (suppress-ms? #f)
                             :allow-other-keys keywords)
+
+  (define (->rfc3339 fraction-length)
+    (apply date->rfc3339
+           date
+           :sec-precision fraction-length
+           keywords))
+
   (assume-type date <date>)
 
-  (let1 converter
-      (^ (fraction-length)
-        (apply date->rfc3339
-               date
-               :sec-precision fraction-length
-               keywords))
-    (cond
-     [suppress-ms?
-      (converter 'seconds)]
-     [else
-      ;; RFC 3339 document only explicitly mention about 2 digit.
-      (converter 2)])))
+  (cond
+   [suppress-ms?
+    (->rfc3339 'seconds)]
+   [else
+    ;; RFC 3339 document only explicitly mention about 2 digit.
+    (->rfc3339 2)]))
