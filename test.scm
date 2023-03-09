@@ -26,10 +26,11 @@
 (date-should (date 2014 1 2 3 4 5 1 0)      (rfc3339-date->date "2014-01-02t03:04:05.001Z"))
 (date-should (date 2014 1 2 3 4 0 0 0)      (rfc3339-date->date "2014-01-02t03:04Z"))
 (date-should (date 2014 1 2 3 4 0 0 32400)      (rfc3339-date->date "2014-01-02t03:04+09:00"))
-(date-should (date 2014 1 2 3 4 0 0 32400)      (rfc3339-date->date "2014-01-02t03:04"))
-(date-should (date 2014 1 2 0 0 0 0 32400)      (rfc3339-date->date "2014-01-02t"))
-(date-should (date 2014 1 2 0 0 0 0 32400)      (rfc3339-date->date "2014-01-02 "))
-(date-should (date 2014 1 2 0 0 0 0 32400)      (rfc3339-date->date "2014-01-02"))
+;; followings explicitly use `current-timezone` since input string missing zone part.
+(date-should (date 2014 1 2 3 4 0 0 (current-timezone))      (rfc3339-date->date "2014-01-02t03:04"))
+(date-should (date 2014 1 2 0 0 0 0 (current-timezone))      (rfc3339-date->date "2014-01-02t"))
+(date-should (date 2014 1 2 0 0 0 0 (current-timezone))      (rfc3339-date->date "2014-01-02 "))
+(date-should (date 2014 1 2 0 0 0 0 (current-timezone))      (rfc3339-date->date "2014-01-02"))
 (date-should (daten 2014 1 2 3 4 5 555555555 0)      (rfc3339-date->date "2014-01-02t03:04:05.555555555Z"))
 
 (date-should (date 2014 1 2 3 4 5 1 (current-timezone)) (rfc3339-date->date "2014-01-02t03:04:05.001"))
