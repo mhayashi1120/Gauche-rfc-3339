@@ -10,18 +10,6 @@ Other name `ISO date` `ISO 8601`
 
 # Docker
 
-**Now testing**
-
-## Building
-
 ```
-docker run -v `pwd`:/home/app --rm -ti practicalscheme/gauche sh -c 'cd /home/app && ./configure && make check'
-```
-
-## Cleanup
-
-cleanup dirty working copy.
-
-```
-docker run -v `pwd`:/home/app --rm -ti practicalscheme/gauche sh -c 'cd /home/app && make distclean'
+make docker-check
 ```
