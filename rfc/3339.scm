@@ -145,7 +145,7 @@
     (match maybe-sec
       [(sec frac)
        (list hour min sec frac)]
-      [else
+      [_
        (list hour min #f #f)]))))
 
 ;; full-time       = partial-time time-offset
