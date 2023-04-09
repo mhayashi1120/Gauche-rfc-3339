@@ -1,5 +1,7 @@
 # RFC 3339 date Parse/Construct for Gauche
 
+[![CI](https://github.com/mhayashi1120/Gauche-rfc-3339/actions/workflows/build.yml/badge.svg)](https://github.com/mhayashi1120/Gauche-rfc-3339/actions/workflows/build.yml)
+
 Construct and Parse like followings format:
 
 - 2014-01-02T03:04:05Z
