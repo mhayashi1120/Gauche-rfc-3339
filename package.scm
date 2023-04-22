@@ -4,7 +4,7 @@
 
 (define-gauche-package "Gauche-rfc-3339"
   ;;
-  :version "1.3.9"
+  :version "1.3.10"
 
   ;; Description of the package.  The first line is used as a short
   ;; summary.
