@@ -9,7 +9,7 @@
 (use rfc.3339)
 (test-module 'rfc.3339)
 
-(load "testlib.scm")
+(load "./__tests__/lib.scm")
 
 (date-should (date 2014 1 2 3 4 5 0 0)      (rfc3339-date->date "2014-01-02T03:04:05Z"))
 (date-should (date 2014 1 2 3 4 5 0 32400)  (rfc3339-date->date "2014-01-02T03:04:05+09:00"))
@@ -115,6 +115,14 @@
   (should "2014-01-02T03:04:05.44Z"
           (date->rfc3339-date fracsec-date :sec-precision 2 :fraction-behavior 'floor)))
 
-;; If you don't want `gosh' to exit with nonzero status even if
-;; the test fails, pass #f to :exit-on-failure.
+;; (use gauche.process)
+
+;; (test* "Invoking other test in JST-9" #t
+;;        (do-process `(TZ=JST-9 gosh "./JST.scm")
+;;                    :directory "./__tests__"))
+
+;; (test* "Invoking other test in Null environment" #t
+;;        (do-process `(gosh "./UTC.scm")
+;;                   :directory "./__tests__"))
+
 (test-end :exit-on-failure #t)
