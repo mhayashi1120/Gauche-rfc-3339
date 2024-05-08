@@ -226,7 +226,8 @@
 ;;     - locale: print with current locale timezone.
 ;;     - <integer>: Convert DATE's zone-offset to the value.
 ;;     - <string>: Print timezone as this value. This imply `keep' zone-offset.
-;;     - #f: suppress timezone
+;;     - none: Suppress timezone with DATE timezone
+;;     - #f: suppress timezone with current locale
 ;; <date> -> <void>
 (define (rfc3339-print-date date :key (datetime-separator #\T)
                             (suppress-time? #f)
@@ -254,7 +255,7 @@
   (define (ensure-timezone arg date)
     (cond
      [(memq arg '(locale #f)) (date-zone-offset (current-date))]
-     [(or (memq arg '(keep #f))
+     [(or (memq arg '(keep none))
           (string? arg))
       (date-zone-offset date)]
      [(integer? arg) arg]
@@ -290,7 +291,7 @@
                  [frac-value (rounder (* secfrac (expt 10 frac-length)))])
             (format #t fmt frac-value)))))
     (cond
-     [(eq? zone-offset #f)]
+     [(memq zone-offset '(none #f))]
      [(eq? zone-offset 'UTC)
       (display "Z")]
      [(or (integer? zone-offset)

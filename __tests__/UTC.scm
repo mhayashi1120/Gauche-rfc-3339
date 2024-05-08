@@ -15,6 +15,10 @@
         (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
                             :zone-offset #f))
 
+(should "2014-01-02T03:04:05.00"
+        (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
+                            :zone-offset 'none))
+
 (should "2014-01-02T03:04:05.00+00:00"
         (date->rfc3339-date (date 2014 01 02 03 04 05 0 0)
                             :zone-offset 'locale))
