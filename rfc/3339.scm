@@ -221,13 +221,13 @@
 ;; - :suppress-tz-colon? : Suppress to print zone-offset colon.
 ;; - :zone-offset : Print with specified timezone. (Default: UTC)
 ;;     Followings are supported:
-;;     - UTC: print with "Z" suffix.
+;;     - UTC: Print with "Z" suffix.
 ;;     - keep: Using DATE's zone-offset.
 ;;     - locale: print with current locale timezone.
 ;;     - <integer>: Convert DATE's zone-offset to the value.
-;;     - <string>: Print timezone as this value. This imply `keep' zone-offset.
-;;     - none: Suppress timezone with DATE timezone
-;;     - #f: suppress timezone with current locale
+;;     - <string>: Print timezone as this value. This imply `keep`.
+;;     - none: Suppress timezone with DATE's zone-offset. This imply `keep`.
+;;     - #f: Suppress timezone with current locale. This imply `locale`.
 ;; <date> -> <void>
 (define (rfc3339-print-date date :key (datetime-separator #\T)
                             (suppress-time? #f)
