@@ -206,6 +206,14 @@
                (or min 0) (or hour 0) day month year
                (or offset (current-zone-offset)))))
 
+;; TODO, FIXME: introduce future
+;; (define-inline <ZONE-OFFSET>
+;;   (<?> (</> <integer> <string> (<Assortment> 'UTC 'keep 'locale 'none #f))))
+;; (define-inline <FRACTION-BEHAVIOR>
+;;   (<Assortment> 'round 'ceiling 'floor 'midpointup))
+;; (define-inline <SECOND-PRECISION>
+;;   (<Assortment> 'seconds 'second 'deci 'centi 'ms 'milli 'micro 'nano 'ns))
+
 ;; ## Print rfc3339 date.
 ;; - :datetime-separator : <char> Print datetime with selected separator (Default: #\T)
 ;;     (e.g. #\space -> "2018-01-02 01:02:03Z")
