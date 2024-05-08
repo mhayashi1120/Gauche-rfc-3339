@@ -247,10 +247,10 @@
 
   (define (secfrac-handler arg)
     (ecase fraction-behavior
-      ['floor floor->exact]
-      ['round round->exact]
-      ['ceiling ceiling->exact]
-      ['midpointup (^x (floor->exact (+ x 1/2)))]))
+      [(floor) floor->exact]
+      [(round) round->exact]
+      [(ceiling) ceiling->exact]
+      [(midpointup) (^x (floor->exact (+ x 1/2)))]))
 
   (define (ensure-timezone arg date)
     (cond
